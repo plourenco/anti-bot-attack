@@ -1,0 +1,41 @@
+# AntiBotAttack
+#
+# By: imTedzi
+# Version: Spigot
+#
+# Configuration Details
+#
+# * MAX-LOGINS - Max logins allowed per time defined in "PER-HOW-MUCH-SECONDS"
+# * PER-HOW-MUCH-SECONDS - How much seconds should the protection detect max logins
+# * ANTIBOT-TIME - How much time will the Antibot Protection kick in and prevent offline logins
+# * DEBUG - You won't need to enable this :)
+#
+# * UNABLE-TO-LOGIN - Message that is given to the player when he can't login because he didn't join through the Server-List
+# * CHANGE-MOTD - In case there's a bot attack happening, do you wish to update the motd to warn the players?
+# * MOTD-PROTECTION-ENABLED - To which motd?
+#
+# * PING - Another protection method over the default one, if you enable this, players who pinged the server (which
+# means players who saw the server in the Server-List) will also be allowed in when an attack is happening (besides premium).
+# However, I found there are bots who ping the server before. So if you wan't to protect against them, disable PING.
+# * REFRESH-TIME - During a period of time, the plugin will refresh the whitelisted players who saw the server in the
+# Server-List. You can change the time here, case of doubt, leave it as default.
+# * CACHE-SIZE - Some massive bot attacks try to fill your BungeeCord RAM. To avoid that, I've set a Max CACHE-SIZE for
+# whitelisted players who saw the server in the Server-List. Increasing = more valid players are allowed during bot attacks
+# Case of doubt, leave it as default
+
+config:
+  login:
+    max-logins: 10
+    per-how-much-seconds: 1
+    antibot-time: 60
+    debug: false
+  messages:
+    unable-to-login: '&cUnable to login!'
+    motd-protection-enabled: '&6Yourserver-firstline%newline%A&7nti Bot Protection &aON'
+  protection:
+    enabled: true
+    change-motd: true
+    ping:
+      enabled: true
+      refresh-time: 300
+      cache-size: 1000
