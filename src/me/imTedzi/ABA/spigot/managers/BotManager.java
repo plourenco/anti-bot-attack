@@ -1,12 +1,16 @@
 package me.imTedzi.ABA.spigot.managers;
 
+import com.google.common.cache.CacheLoader;
 import me.imTedzi.ABA.spigot.Main;
 import me.imTedzi.ABA.spigot.nms.NMSAcessor;
+import me.imTedzi.ABA.spigot.protocol.CompatibleCacheBuilder;
+import me.imTedzi.ABA.spigot.protocol.LoginSession;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public class BotManager {
@@ -16,6 +20,7 @@ public class BotManager {
     private int loginspersec = 0;
     private boolean antiBotEnabled = false;
     private HashMap<String, Long> hosts = new HashMap<String, Long>();
+    private final ConcurrentMap<String, LoginSession> loginSession = buildCache(1, -1);
 
     private static BotManager instance;
 
@@ -50,13 +55,13 @@ public class BotManager {
     public void antiBotTiming() {
         if (task == null) {
             this.plugin.getLogger().log(Level.WARNING, "Anti-Bot was enabled.");
-            changeOnlineMode(true);
+            setOnlineMode(true);
         }
         task = new BukkitRunnable() {
             public void run() {
                 if (antiBotEnabled) {
                     antiBotEnabled = false;
-                    changeOnlineMode(false);
+                    setOnlineMode(false);
                     plugin.getLogger().log(Level.WARNING, "Anti-Bot was disabled");
                     task = null;
                 }
@@ -88,37 +93,34 @@ public class BotManager {
                 Config.PROTECTION_PING_REFRESH0TIME * 1000 <= System.currentTimeMillis();
     }
 
-    /**
-     * Not needed, and I'm not sure it works too
-     * @param p
-     * @param uuid
-     * @return boolean
-     */
-    public boolean bindUUID(Player p, UUID uuid) {
-        try {
-            NMSAcessor.bindUUID(p, uuid);
-
-            if (Config.LOGIN_DEBUG) {
-                plugin.getLogger().log(Level.INFO, "Binded UUID: " + uuid.toString());
-                plugin.getLogger().log(Level.INFO, "Has uuid: " + p.getUniqueId());
-            }
-            return true;
-        }
-        catch (Exception e) {
-            p.kickPlayer(Config.color(Config.MESSAGES_UNABLE0TO0LOGIN));
-            this.plugin.getLogger().warning("[ABACommand] Internal error for " + p.getName() + ", preventing login.");
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public void changeOnlineMode(boolean onlinemode) {
+    public void setOnlineMode(boolean onlinemode) {
         try {
             NMSAcessor.setOnlineMode(Bukkit.getServer(), onlinemode);
         }
         catch (Exception e) {
-            this.plugin.getLogger().warning("[ABACommand] Internal error for prevented protection from enabling");
+            this.plugin.getLogger()
+                    .warning("[ABACommand] Internal error for prevented protection from enabling");
         }
+    }
+
+    public ConcurrentMap<String, LoginSession> getLoginSessions() {
+        return loginSession;
+    }
+
+    public static <K, V> ConcurrentMap<K, V> buildCache(int expireAfterWrite, int maxSize) {
+        CompatibleCacheBuilder<Object, Object> builder = CompatibleCacheBuilder.newBuilder();
+
+        if (expireAfterWrite > 0) {
+            builder.expireAfterWrite(expireAfterWrite, TimeUnit.MINUTES);
+        }
+
+        if (maxSize > 0) {
+            builder.maximumSize(maxSize);
+        }
+
+        return builder.build(CacheLoader.from(() -> {
+            throw new UnsupportedOperationException();
+        }));
     }
 
     public static BotManager getInstance() {

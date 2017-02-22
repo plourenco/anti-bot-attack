@@ -2,10 +2,12 @@ package me.imTedzi.ABA.spigot;
 
 import me.imTedzi.ABA.spigot.commands.ABACommand;
 import me.imTedzi.ABA.spigot.listeners.PingListener;
-import me.imTedzi.ABA.spigot.listeners.PlayerJoinListener;
 import me.imTedzi.ABA.spigot.listeners.PreLoginListener;
 import me.imTedzi.ABA.spigot.managers.BotManager;
 import me.imTedzi.ABA.spigot.managers.Config;
+import me.imTedzi.ABA.spigot.protocol.EncryptionPacketListener;
+import me.imTedzi.ABA.spigot.protocol.EncryptionUtil;
+import me.imTedzi.ABA.spigot.protocol.StartPacketListener;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -14,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
+import java.security.KeyPair;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -21,6 +24,9 @@ public class Main extends JavaPlugin {
 
     private FileConfiguration configuration;
     private File configFile;
+
+    /* immutable key pair to be thread safe | used for encrypting and decrypting traffic */
+    private final KeyPair keyPair = EncryptionUtil.generateKeyPair();
 
     private static Main instance;
 
@@ -32,9 +38,10 @@ public class Main extends JavaPlugin {
         manager.refreshPing();
         new PingListener(this);
         new PreLoginListener(this);
-        new PlayerJoinListener(this);
         Config.loadConfig();
         getCommand("aba").setExecutor(new ABACommand(this));
+        EncryptionPacketListener.register(this, 3);
+        StartPacketListener.register(this, 3);
         if(Config.PROTECTION_ENABLED) {
             this.getLogger().log(Level.INFO, Config.color("Protection is " + ChatColor.GREEN + "enabled " +
                     "(" + getDescription().getVersion() + ")"));
@@ -43,6 +50,10 @@ public class Main extends JavaPlugin {
             this.getLogger().log(Level.INFO, Config.color("Protection is " + ChatColor.GREEN + "not enabled " +
                     "(" + getDescription().getVersion() + ")"));
         }
+    }
+
+    public KeyPair getServerKey() {
+        return keyPair;
     }
 
     public void loadConfig() throws IOException {

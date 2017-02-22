@@ -74,30 +74,4 @@ public class NMSAcessor {
         Object booleanWrapper = onlineMode.get(sv);
         omValue.set(booleanWrapper, value);
     }
-
-    /**
-     * Change player uuid using reflection
-     * @param p player
-     * @param uuid uuid
-     */
-    public static void bindUUID(Player p, UUID uuid)
-            throws InvocationTargetException, IllegalAccessException, NoSuchFieldException {
-        Object craftPlayer = CraftPlayer.cast(p);
-        Object entityPlayer = getHandle.invoke(craftPlayer);
-        Object entityHuman = EntityHuman.cast(entityPlayer);
-        Object entity = Entity.cast(entityPlayer);
-
-        /* Create new GameProfile */
-        GameProfile profile = new GameProfile(uuid, p.getName());
-
-        /* Change GameProfile from EntityHuman Class */
-        Field bH = EntityHuman.getDeclaredField("bH");
-        bH.setAccessible(true);
-        bH.set(entityHuman, profile);
-
-        /* Change uniqueID from Entity Class */
-        Field uniqueID = Entity.getDeclaredField("uniqueID");
-        uniqueID.setAccessible(true);
-        uniqueID.set(entity, uuid);
-    }
 }
