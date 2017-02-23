@@ -1,16 +1,14 @@
 package me.imTedzi.ABA.spigot.managers;
 
-import com.google.common.cache.CacheLoader;
 import me.imTedzi.ABA.spigot.Main;
 import me.imTedzi.ABA.spigot.nms.NMSAcessor;
-import me.imTedzi.ABA.spigot.protocol.CompatibleCacheBuilder;
-import me.imTedzi.ABA.spigot.protocol.LoginSession;
+import me.imTedzi.ABA.spigot.util.BukkitLoginSession;
+import me.imTedzi.ABA.spigot.util.LRUCache;
+import me.imTedzi.ABA.spigot.util.LoginSession;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public class BotManager {
@@ -19,14 +17,16 @@ public class BotManager {
     private BukkitRunnable task;
     private int loginspersec = 0;
     private boolean antiBotEnabled = false;
-    private HashMap<String, Long> hosts = new HashMap<String, Long>();
-    private final ConcurrentMap<String, LoginSession> loginSession = buildCache(1, -1);
+    private LRUCache<String, Long> hosts;
+    private LRUCache<String, BukkitLoginSession> loginSession;
 
     private static BotManager instance;
 
     public BotManager(Main plugin) {
         instance = this;
         this.plugin = plugin;
+        this.hosts = new LRUCache<String, Long>(Config.PROTECTION_CACHE0SIZE);
+        this.loginSession = new LRUCache<String, BukkitLoginSession>(Config.PROTECTION_CACHE0SIZE);
     }
 
     public boolean isEnabled() {
@@ -55,13 +55,11 @@ public class BotManager {
     public void antiBotTiming() {
         if (task == null) {
             this.plugin.getLogger().log(Level.WARNING, "Anti-Bot was enabled.");
-            setOnlineMode(true);
         }
         task = new BukkitRunnable() {
             public void run() {
                 if (antiBotEnabled) {
                     antiBotEnabled = false;
-                    setOnlineMode(false);
                     plugin.getLogger().log(Level.WARNING, "Anti-Bot was disabled");
                     task = null;
                 }
@@ -70,22 +68,8 @@ public class BotManager {
         task.runTaskLater(Main.getInstance(), Config.LOGIN_ANTIBOT0TIME * 20);
     }
 
-    public void refreshPing() {
-        new BukkitRunnable() {
-
-            public void run() {
-                Iterator<Map.Entry<String, Long>> it = hosts.entrySet().iterator();
-                while(it.hasNext()) {
-                    if(it.next().getValue() + Config.PROTECTION_PING_REFRESH0TIME * 1000 > System.currentTimeMillis())
-                        it.remove();
-                }
-            }
-        }.runTaskTimer(Main.getInstance(), 0, Config.PROTECTION_PING_REFRESH0TIME * 20);
-    }
-
     public void addPing(String host) {
-        if(hosts.size() < Config.PROTECTION_PING_CACHE0SIZE)
-            hosts.put(host, System.currentTimeMillis());
+        hosts.put(host, System.currentTimeMillis());
     }
 
     public boolean isPing(String host) {
@@ -93,34 +77,8 @@ public class BotManager {
                 Config.PROTECTION_PING_REFRESH0TIME * 1000 <= System.currentTimeMillis();
     }
 
-    public void setOnlineMode(boolean onlinemode) {
-        try {
-            NMSAcessor.setOnlineMode(Bukkit.getServer(), onlinemode);
-        }
-        catch (Exception e) {
-            this.plugin.getLogger()
-                    .warning("[ABACommand] Internal error for prevented protection from enabling");
-        }
-    }
-
-    public ConcurrentMap<String, LoginSession> getLoginSessions() {
+    public LRUCache<String, BukkitLoginSession> getLoginSessions() {
         return loginSession;
-    }
-
-    public static <K, V> ConcurrentMap<K, V> buildCache(int expireAfterWrite, int maxSize) {
-        CompatibleCacheBuilder<Object, Object> builder = CompatibleCacheBuilder.newBuilder();
-
-        if (expireAfterWrite > 0) {
-            builder.expireAfterWrite(expireAfterWrite, TimeUnit.MINUTES);
-        }
-
-        if (maxSize > 0) {
-            builder.maximumSize(maxSize);
-        }
-
-        return builder.build(CacheLoader.from(() -> {
-            throw new UnsupportedOperationException();
-        }));
     }
 
     public static BotManager getInstance() {

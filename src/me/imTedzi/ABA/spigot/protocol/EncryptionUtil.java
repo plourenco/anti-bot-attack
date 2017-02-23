@@ -82,6 +82,6 @@ public class EncryptionUtil {
     }
 
     private EncryptionUtil() {
-        //utility
+        // Utility
     }
 }

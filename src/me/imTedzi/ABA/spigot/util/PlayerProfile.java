@@ -1,4 +1,4 @@
-package me.imTedzi.ABA.spigot.protocol;
+package me.imTedzi.ABA.spigot.util;
 
 import java.util.UUID;
 

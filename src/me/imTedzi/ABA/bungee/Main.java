@@ -27,7 +27,6 @@ public class Main extends Plugin {
         plugin = this;
         manager = new BotManager(this);
         manager.AntiBot();
-        manager.refreshPing();
         new PostLoginListener(this, manager);
         new PingListener(this, manager);
         new HandShakeListener(this, manager);

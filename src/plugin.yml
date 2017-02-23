@@ -1,6 +1,6 @@
 name: AntiBotAttack
 main: me.imTedzi.ABA.spigot.Main
-version: 2.0
+version: 2.1
 author: imTedzi
 commands:
   aba:

@@ -1,4 +1,4 @@
-package me.imTedzi.ABA.spigot.protocol;
+package me.imTedzi.ABA.spigot.util;
 
 import java.util.UUID;
 
@@ -9,33 +9,15 @@ import java.util.UUID;
 public class LoginSession {
 
     private final String username;
-    private final PlayerProfile profile;
 
     private UUID uuid;
 
-    protected boolean registered;
-
-    public LoginSession(String username, boolean registered, PlayerProfile profile) {
+    public LoginSession(String username) {
         this.username = username;
-        this.registered = registered;
-        this.profile = profile;
     }
 
     public String getUsername() {
         return username;
-    }
-
-    /**
-     * This value is always false if we authenticate the player with a cracked authentication
-     *
-     * @return
-     */
-    public boolean needsRegistration() {
-        return !registered;
-    }
-
-    public PlayerProfile getProfile() {
-        return profile;
     }
 
     /**
@@ -56,4 +38,3 @@ public class LoginSession {
         this.uuid = uuid;
     }
 }
-

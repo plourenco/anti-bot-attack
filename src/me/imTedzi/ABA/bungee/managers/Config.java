@@ -16,9 +16,9 @@ public class Config {
     public static boolean PROTECTION_ENABLED = true;
     public static boolean PROTECTION_CHANGE0MOTD = true;
     public static boolean PROTECTION_OFFLINE = true;
+    public static int PROTECTION_CACHE0SIZE = 100;
     public static boolean PROTECTION_PING_ENABLED = true;
     public static int PROTECTION_PING_REFRESH0TIME = 300;
-    public static int PROTECTION_PING_CACHE0SIZE = 1000;
 
     public static void loadConfig()
     {

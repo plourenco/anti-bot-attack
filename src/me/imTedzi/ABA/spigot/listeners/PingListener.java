@@ -1,9 +1,8 @@
 package me.imTedzi.ABA.spigot.listeners;
 
-import me.imTedzi.ABA.bungee.managers.Config;
+import me.imTedzi.ABA.spigot.managers.Config;
 import me.imTedzi.ABA.spigot.Main;
 import me.imTedzi.ABA.spigot.managers.BotManager;
-import net.md_5.bungee.api.ServerPing;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

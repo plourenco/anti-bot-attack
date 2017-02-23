@@ -1,5 +1,6 @@
 package me.imTedzi.ABA.bungee.managers;
 
+import me.imTedzi.ABA.bungee.LRUCache;
 import me.imTedzi.ABA.bungee.Main;
 import net.md_5.bungee.BungeeCord;
 import net.md_5.bungee.UserConnection;
@@ -19,7 +20,7 @@ public class BotManager {
     public ScheduledTask task;
     public int loginspersec = 0;
     public boolean antiBotEnabled = false;
-    public HashMap<String, Long> hosts = new HashMap<String, Long>();
+    public LRUCache<String, Long> hosts = new LRUCache<String, Long>(Config.PROTECTION_CACHE0SIZE);
 
     public BotManager(Main plugin) {
         this.plugin = plugin;
@@ -53,22 +54,8 @@ public class BotManager {
         }, Config.LOGIN_ANTIBOT0TIME, TimeUnit.SECONDS);
     }
 
-    public void refreshPing() {
-        plugin.getProxy().getScheduler().schedule(plugin, new Runnable()
-        {
-            public void run() {
-                Iterator<Map.Entry<String, Long>> it = hosts.entrySet().iterator();
-                while(it.hasNext()) {
-                    if(it.next().getValue() + Config.PROTECTION_PING_REFRESH0TIME*1000 > System.currentTimeMillis())
-                        it.remove();
-                }
-            }
-        }, 0, Config.PROTECTION_PING_REFRESH0TIME, TimeUnit.SECONDS);
-    }
-
     public void addPing(String host) {
-        if(hosts.size() < Config.PROTECTION_PING_CACHE0SIZE)
-            hosts.put(host, System.currentTimeMillis());
+        hosts.put(host, System.currentTimeMillis());
     }
 
     public boolean isPing(String host) {
@@ -77,14 +64,12 @@ public class BotManager {
     }
 
     public boolean bindUUID(ProxiedPlayer p, UUID uuid) {
-        try
-        {
+        try {
             InitialHandler handler = (InitialHandler)p.getPendingConnection();
 
             Field sf = handler.getClass().getDeclaredField("uniqueId");
             sf.setAccessible(true);
             sf.set(handler, uuid);
-
             sf = handler.getClass().getDeclaredField("offlineId");
             sf.setAccessible(true);
             sf.set(handler, uuid);
@@ -93,19 +78,15 @@ public class BotManager {
             g.addAll(this.plugin.getProxy().getConfigurationAdapter().getGroups(p.getUniqueId().toString()));
 
             UserConnection userConnection = (UserConnection)p;
-
             for (String s : g) {
                 userConnection.addGroups(s);
             }
 
             return true;
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             p.disconnect(Config.color(Config.MESSAGES_UNABLE0TO0LOGIN));
-
             this.plugin.getLogger().warning("[ABACommand] Internal error for " + p.getName() + ", preventing login.");
-
             e.printStackTrace();
 
             return false;
@@ -120,7 +101,8 @@ public class BotManager {
             sf = handler.getClass().getDeclaredField("onlineMode");
             sf.setAccessible(true);
             sf.set(handler, onlinemode);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             this.plugin.getLogger().warning("[ABACommand] Internal error for prevented protection from enabling");
         }
     }

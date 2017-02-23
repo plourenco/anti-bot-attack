@@ -2,20 +2,21 @@ package me.imTedzi.ABA.spigot.protocol;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import me.imTedzi.ABA.spigot.Main;
+import me.imTedzi.ABA.spigot.managers.BotManager;
+import me.imTedzi.ABA.spigot.nms.NMSAcessor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 /**
- * Thanks to games647
+ * Credits to games647
  *
  * Handles incoming encryption responses from connecting clients.
  * It prevents them from reaching the server because that cannot handle
  * it in offline mode.
- *
- * Moreover this manages spoofing the player uuid
  *
  * Receiving packet information:
  * http://wiki.vg/Protocol#Encryption_Response
@@ -32,14 +33,18 @@ public class EncryptionPacketListener extends PacketAdapter {
         this.plugin = plugin;
     }
 
-    public static void register(Main plugin, int workerThreads) {
+    public static void register(Main plugin, int threads) {
         ProtocolLibrary.getProtocolManager().getAsynchronousManager()
-                .registerAsyncHandler(new EncryptionPacketListener(plugin)).start(workerThreads);
+                .registerAsyncHandler(new EncryptionPacketListener(plugin)).start(threads);
     }
 
+    /**
+     * Offline login has no Encryption Packet
+     */
     @Override
     public void onPacketReceiving(PacketEvent packetEvent) {
-        if (packetEvent.isCancelled()) {
+        if (packetEvent.isCancelled()
+                || !BotManager.getInstance().isEnabled()) {
             return;
         }
 
@@ -47,7 +52,7 @@ public class EncryptionPacketListener extends PacketAdapter {
         byte[] sharedSecret = packetEvent.getPacket().getByteArrays().read(0);
 
         packetEvent.getAsyncMarker().incrementProcessingDelay();
-        ResponseTask verifyTask = new ResponseTask(plugin, packetEvent, sender, sharedSecret);
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, verifyTask);
+        EncryptionTask task = new EncryptionTask(plugin, packetEvent, sender, sharedSecret);
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, task);
     }
 }

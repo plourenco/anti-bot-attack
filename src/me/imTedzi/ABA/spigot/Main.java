@@ -27,21 +27,21 @@ public class Main extends JavaPlugin {
 
     /* immutable key pair to be thread safe | used for encrypting and decrypting traffic */
     private final KeyPair keyPair = EncryptionUtil.generateKeyPair();
+    private final int threads = 3;
 
     private static Main instance;
 
     @Override
     public void onEnable() {
         instance = this;
+        Config.loadConfig();
         BotManager manager = new BotManager(this);
         manager.AntiBot();
-        manager.refreshPing();
         new PingListener(this);
         new PreLoginListener(this);
-        Config.loadConfig();
         getCommand("aba").setExecutor(new ABACommand(this));
-        EncryptionPacketListener.register(this, 3);
-        StartPacketListener.register(this, 3);
+        EncryptionPacketListener.register(this, threads);
+        StartPacketListener.register(this, threads);
         if(Config.PROTECTION_ENABLED) {
             this.getLogger().log(Level.INFO, Config.color("Protection is " + ChatColor.GREEN + "enabled " +
                     "(" + getDescription().getVersion() + ")"));
